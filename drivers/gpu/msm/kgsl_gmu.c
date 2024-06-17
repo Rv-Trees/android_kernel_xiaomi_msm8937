@@ -1612,7 +1612,7 @@ static int gmu_start(struct kgsl_device *device)
 
 		/* Vote for minimal DDR BW for GMU to init */
 		ret = msm_bus_scale_client_update_request(gmu->pcl,
-				pwr->pwrlevels[pwr->default_pwrlevel].bus_min);
+				pwr->pwrlevels[pwr->num_pwrlevels - 1].bus_min);
 		if (ret)
 			dev_err(&gmu->pdev->dev,
 				"Failed to allocate gmu b/w: %d\n", ret);
@@ -1623,11 +1623,6 @@ static int gmu_start(struct kgsl_device *device)
 			goto error_gmu;
 
 		ret = hfi_start(device, gmu, GMU_COLD_BOOT);
-		if (ret)
-			goto error_gmu;
-
-		/* Request default DCVS level */
-		ret = kgsl_pwrctrl_set_default_gpu_pwrlevel(device);
 		if (ret)
 			goto error_gmu;
 
@@ -1649,10 +1644,6 @@ static int gmu_start(struct kgsl_device *device)
 		ret = hfi_start(device, gmu, GMU_COLD_BOOT);
 		if (ret)
 			goto error_gmu;
-
-		ret = kgsl_pwrctrl_set_default_gpu_pwrlevel(device);
-		if (ret)
-			goto error_gmu;
 		break;
 
 	case KGSL_STATE_RESET:
@@ -1671,9 +1662,6 @@ static int gmu_start(struct kgsl_device *device)
 		ret = hfi_start(device, gmu, GMU_COLD_BOOT);
 		if (ret)
 			goto error_gmu;
-
-		/* Send DCVS level prior to reset*/
-		kgsl_pwrctrl_set_default_gpu_pwrlevel(device);
 
 		break;
 	default:
